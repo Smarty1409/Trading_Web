@@ -1,9 +1,8 @@
 
 
-import './style.css';
-import { TRADER_DATA, fetchTraderData } from './traderData.js';
-
-document.getElementById("app").innerHTML= "<h1 style='color:white'> Website Working</h1>"
+import './style .css';
+// import { TRADER_DATA, fetchTraderData } from './traderData .js';
+document.getElementById("app").innerHTML = "<h1 style='color:white'>Website Working </h1>";
 
 const ICONS = {
   menu: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round"><path d="M4 7h16M4 12h16M4 17h16"/></svg>',
