@@ -1,21 +1,9 @@
-/**
- * Trading Dashboard — main.js
- * ---------------------------------------------------------------------------
- * Vanilla JS, no frameworks. All content lives in ./traderData.js — this
- * file only knows how to render that data and keep it feeling alive.
- *   1. ICONS     — small inline SVGs, reused across sections.
- *   2. FORMAT    — number/currency/percent formatting + tone helpers.
- *   3. TEMPLATES — pure functions that turn data into HTML strings.
- *   4. BEHAVIOR  — DOM wiring: nav, scroll reveal, live refresh, etc.
- * ---------------------------------------------------------------------------
- */
+
 
 import './style.css';
 import { TRADER_DATA, fetchTraderData } from './traderData.js';
 
-/* =============================================================================
-   1. ICONS — small inline SVGs, kept stroke-based so they inherit color
-============================================================================= */
+
 
 const ICONS = {
   menu: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round"><path d="M4 7h16M4 12h16M4 17h16"/></svg>',
@@ -37,11 +25,7 @@ const ICONS = {
 const icon = (name, cls = '') =>
   `<span class="icon ${cls}" aria-hidden="true">${ICONS[name] || ''}</span>`;
 
-/* =============================================================================
-   2. FORMAT — number/currency/percent formatting + tone helpers
-============================================================================= */
 
-/** Formats a raw number per its declared format + sign convention. */
 function formatValue(value, format, signed) {
   const negative = value < 0;
   const sign = negative ? '-' : signed && value > 0 ? '+' : '';
@@ -64,9 +48,7 @@ const formatSignedCurrency = (n) => formatValue(n, 'currency', true);
 const formatPercent = (n) => formatValue(n, 'percent', false);
 const formatSignedPercent = (n) => formatValue(n, 'percent', true);
 
-/** Overview KPI cards derive their color from the number itself, not a
- *  hand-set flag — so the UI stays correct automatically as live values
- *  change sign (e.g. net P&L swinging from red to green). */
+
 function toneForItem(item) {
   if (['capital', 'totalTrades', 'turnover'].includes(item.key)) return 'neutral';
   if (item.key === 'winRate') return item.value >= 50 ? 'positive' : 'negative';
@@ -77,14 +59,11 @@ function toneForItem(item) {
 
 const toneForNumber = (n) => (n > 0 ? 'positive' : n < 0 ? 'negative' : 'neutral');
 
-/** Small helpers so templates can optionally skip their entrance animation
- *  (used when a section is re-rendered by the live-refresh poller). */
+
 const revealClass = (animate) => (animate ? 'reveal' : '');
 const revealStyle = (animate, delayMs) => (animate ? `style="--d:${delayMs}ms"` : '');
 
-/* =============================================================================
-   3. TEMPLATES — data -> HTML strings
-============================================================================= */
+
 
 function renderNav(data) {
   const links = data.nav
@@ -120,8 +99,6 @@ function renderNav(data) {
   `;
 }
 
-/** Builds the hero's live "portfolio.json" snapshot directly from the
- *  overview data, so the two never drift out of sync. */
 function buildPortfolioSnapshotLines(overview) {
   const capitalReturns = overview.groups[0].items;
   const activity = overview.groups[1].items;
@@ -254,9 +231,7 @@ function renderProfile(data) {
   `;
 }
 
-/** Renders one stat card. animate=true (initial load) starts the value at
- *  its zero state with data-* attributes for initStatCardAnimations() to
- *  pick up; animate=false (live refresh) renders the final value directly. */
+
 function renderStatCard(item, index, animate) {
   const tone = toneForItem(item);
   const display = animate ? formatValue(0, item.format, item.signed) : formatValue(item.value, item.format, item.signed);
@@ -352,10 +327,7 @@ function monthAbbrev(month) {
   return month.split(' ')[0];
 }
 
-/** Builds the monthly P&L bar chart as an inline SVG. Bars render at their
- *  final size directly (no per-bar grow animation) — the chart panel gets
- *  the standard reveal fade/slide-in instead, keeping the motion language
- *  consistent with the rest of the site. */
+
 function renderMonthlyChartSvg(months) {
   const width = 760;
   const height = 220;
@@ -676,19 +648,15 @@ function render(data) {
   `;
 }
 
-/* =============================================================================
-   4. BEHAVIOR
-============================================================================= */
+
 
 const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
-/** Holds whatever data is currently on screen, so refresh/export/report
- *  handlers always work from the latest values instead of the initial
- *  static import. */
+
 let currentData = TRADER_DATA;
 
-/** Sticky nav background + scroll-spy active link, driven by IntersectionObserver. */
+
 function initNav() {
   const nav = document.getElementById('nav');
   const sentinel = document.getElementById('scroll-sentinel');
@@ -738,7 +706,7 @@ function initNav() {
   sections.forEach((section) => spy.observe(section));
 }
 
-/** Types the hero's portfolio.json snapshot character by character. */
+
 async function initTypewriter(data) {
   const body = document.getElementById('editor-body');
   const lines = buildPortfolioSnapshotLines(data.overview);
@@ -777,7 +745,7 @@ async function initTypewriter(data) {
   body.lastElementChild.appendChild(cursor);
 }
 
-/** Fades/slides `.reveal` elements in as they enter the viewport. */
+
 function initScrollReveal() {
   const observer = new IntersectionObserver(
     (entries, obs) => {
@@ -793,9 +761,7 @@ function initScrollReveal() {
   document.querySelectorAll('.reveal').forEach((el) => observer.observe(el));
 }
 
-/** Animates each overview stat card's value (and bar, if present) counting
- *  up once it scrolls into view. Runs only on initial load — live refreshes
- *  update values directly via updateOverviewStats() instead. */
+
 function initStatCardAnimations() {
   const cards = document.querySelectorAll('.stat-card');
 
@@ -839,9 +805,7 @@ function initStatCardAnimations() {
   cards.forEach((card) => observer.observe(card));
 }
 
-/** Live-refresh path: updates overview values/tones/bars in place, with
- *  no animation and no DOM rebuild — this is the surgical update a real
- *  broker feed would trigger every poll. */
+
 function updateOverviewStats(overview) {
   overview.groups.forEach((group) => {
     group.items.forEach((item) => {
@@ -867,15 +831,13 @@ function updateMonthlyPnl(monthlyPnl) {
   if (tableBody) tableBody.innerHTML = renderMonthlyTableRows(monthlyPnl.months);
 }
 
-/** Live-refresh path for the recent-trades feed — order/count can change
- *  as new trades come in, so the whole list is replaced. New items render
- *  visible immediately rather than replaying the scroll-reveal animation. */
+
 function updateRecentTrades(activity) {
   const timeline = document.getElementById('timeline');
   if (timeline) timeline.innerHTML = renderTimelineItems(activity.trades, { animate: false });
 }
 
-/** Grows the timeline's vertical line once the section scrolls into view. */
+
 function initTimelineDraw() {
   const timeline = document.getElementById('timeline');
   if (!timeline) return;
@@ -893,7 +855,7 @@ function initTimelineDraw() {
   observer.observe(timeline);
 }
 
-/** Reveals the back-to-top button once the hero has scrolled out of view. */
+
 function initBackToTop() {
   const button = document.getElementById('back-to-top');
   const hero = document.getElementById('home');
@@ -907,7 +869,7 @@ function initBackToTop() {
   });
 }
 
-/** Basic required + email-format validation with accessible inline errors. */
+
 function initContactForm() {
   const form = document.getElementById('contact-form');
   if (!form) return;
@@ -948,12 +910,7 @@ function initContactForm() {
       return;
     }
 
-    // No backend is wired up yet — replace this block with a real request,
-    // e.g.:
-    //   await fetch('https://your-endpoint.example/contact', {
-    //     method: 'POST',
-    //     body: new FormData(form),
-    //   });
+ 
     const submitButton = form.querySelector('.form__submit');
     submitButton.disabled = true;
     status.textContent = 'Sending…';
@@ -977,8 +934,7 @@ function initFooterYear() {
   if (year) year.textContent = new Date().getFullYear();
 }
 
-/* --- Report download: real file if configured, otherwise a real CSV
-   generated on the fly from live data. Never a dead link. --- */
+
 
 function csvEscape(value) {
   const str = String(value);
@@ -1063,16 +1019,14 @@ function initExportCsvButton() {
   btn.addEventListener('click', () => downloadCsvReport(currentData));
 }
 
-/* --- QR / share card --- */
+
 
 function getPortfolioUrl() {
   return currentData.meta.siteUrl || `${window.location.origin}${window.location.pathname}`;
 }
 
 function getQrCodeSrc(url) {
-  // Uses a public QR-generation endpoint so no QR library needs to be
-  // bundled. Swap this for a self-hosted generator if you'd rather not
-  // depend on a third-party service.
+
   return `https://api.qrserver.com/v1/create-qr-code/?size=280x280&margin=10&data=${encodeURIComponent(url)}`;
 }
 
@@ -1108,18 +1062,14 @@ function initShareCard() {
           copyBtn.classList.remove('is-copied');
         }, 1600);
       } catch (err) {
-        // Clipboard access can be blocked by the browser/permissions —
-        // the URL is still visible and selectable as a fallback.
+       
         console.warn('Copy failed, URL is still shown for manual copy.', err);
       }
     });
   }
 }
 
-/* --- Live updates: polls fetchTraderData() on an interval and refreshes
-   just the sections that make sense to treat as "live" (overview,
-   monthly P&L, recent trades). Everything else on the page is stable
-   reference content and re-renders only on a full page load. --- */
+
 
 function updateLastSynced() {
   const el = document.getElementById('last-synced');
